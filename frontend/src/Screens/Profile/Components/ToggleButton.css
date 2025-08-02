@@ -1,0 +1,48 @@
+/* .toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    position: relative;
+  }
+
+  .toggle-button {
+    position: relative;
+    width: 100px;
+    height: 40px;
+    background: #ccc;
+    border-radius: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+    transition: background 0.3s;
+  }
+
+  .toggle-button.active {
+    background: #007bff;
+  }
+
+  .toggle-thumb {
+    width: 30px;
+    height: 30px;
+    background: #007bff;
+    border-radius: 50%;
+    position: relative;
+    transition: transform 0.3s;
+    transform: translateX(0);
+  }
+
+  .toggle-button.active .toggle-thumb {
+    transform: translateX(64px);
+  }
+
+  .toggle-label {
+    color: white;
+    font-size: 14px;
+    margin-left: 8px;
+    position: absolute;
+    left: 25px;
+    display: none;
+  } */

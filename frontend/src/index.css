@@ -1,0 +1,132 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  font-family: "Poppins";
+}
+
+@layer utilities {
+  .mainheading {
+    @apply lg:text-[57px] md:text-[48px] text-[36px] lg:leading-[60px] md:leading-[40px] sm:leading-[30px];
+  }
+  .subheading {
+    @apply lg:text-[44px] md:text-[38px] text-[28px] lg:leading-[45px] md:leading-[40px] sm:leading-[30px];
+  }
+  .preheading {
+    @apply lg:text-[35px] md:text-[28px] text-[19px] lg:leading-[38px] md:leading-[30px] leading-[20px];
+  }
+  .heading1 {
+    @apply lg:text-[33px] md:text-[26px] text-[17px] lg:leading-[36px] md:leading-[28px] sm:leading-[18px];
+  }
+  .heading2 {
+    @apply lg:text-[50px] md:text-[30px] text-[20px] lg:leading-[68px] md:leading-[48px] sm:leading-[24px];
+  }
+  .text1 {
+    @apply lg:text-[48px] md:text-[34px] text-[22px] lg:leading-[57px] md:leading-[38px] sm:leading-[24px];
+  }
+  .text2 {
+    @apply lg:text-[42px] md:text-[28px] text-[20px] lg:leading-[50px] md:leading-[34px] sm:leading-[22px];
+  }
+  .text3 {
+    @apply lg:text-[38px] md:text-[30px] text-[22px] lg:leading-[48px] md:leading-[40px] sm:leading-[18px];
+  }
+  .text4 {
+    @apply lg:text-[35px] md:text-[28px] text-[20px] lg:leading-[50px] md:leading-[32px] sm:leading-[20px];
+  }
+  .text5 {
+    @apply lg:text-[32px] md:text-[30px] text-[22px] lg:leading-[52px] md:leading-[34px] sm:leading-[22px];
+  }
+  .text6 {
+    @apply lg:text-[30px] md:text-[24px] text-[18px] lg:leading-[36px] md:leading-[28px] sm:leading-[18px];
+  }
+  .text7 {
+    @apply lg:text-[28px] md:text-[22px] text-[17px] lg:leading-[33px] md:leading-[24px] sm:leading-[15px];
+  }
+  .text8 {
+    @apply lg:text-[26px] md:text-[21px] text-[17px] lg:leading-[35px] md:leading-[28px] leading-[18px];
+  }
+  .text9 {
+    @apply lg:text-[24px] md:text-[19px] text-[16px] lg:leading-[28px] md:leading-[24px] leading-[17px];
+  }
+  .text10 {
+    @apply lg:text-[22px] md:text-[21px] text-[18px] lg:leading-[30px] md:leading-[26px] leading-[19px];
+  }
+  .text11 {
+    @apply lg:text-[20px] md:text-[16px] text-[12px] lg:leading-[28px] md:leading-[22px] leading-[16px];
+  }
+  .text12 {
+    @apply lg:text-[18px] md:text-[15px] text-[12px] lg:leading-[20px] md:leading-[16px] sm:leading-[13px];
+  }
+  .text13 {
+    @apply lg:text-[16px] md:text-[14px] text-[12px] lg:leading-[21px] md:leading-[18px] sm:leading-[14px];
+  }
+  .text14 {
+    @apply lg:text-[15px] md:text-[13px] text-[11px] lg:leading-[21px] md:leading-[18px] leading-[14px];
+  }
+  .text15 {
+    @apply lg:text-[14px] md:text-[12px] text-[10px] lg:leading-[19px] md:leading-[16px] leading-[12px];
+  }
+  .text16 {
+    @apply lg:text-[13px] md:text-[11px] text-[9px] lg:leading-[15px] md:leading-[10px] leading-[8px];
+  }
+}
+
+/* .hidden-date-picker::-webkit-datetime-edit {
+  display: none;
+} */
+
+.gridclass {
+  @apply grid xl:grid-cols-3 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-2 grid-cols-1;
+}
+.custom-scroll::-webkit-scrollbar {
+  width: 6px; /* Scrollbar width */
+  height: 50px; /* Custom scrollbar height */
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* .custom-scrollbar {
+  overflow: visible; 
+} */
+
+.custom-scrollbar::-webkit-scrollbar {
+  -webkit-appearance: none;
+  height: 3px;
+}
+
+/* For medium and larger screens - Enable overflow and custom scrollbar */
+@media (min-width: 768px) {
+  .custom-scrollbar {
+    overflow-y: scroll;
+    scrollbar-width: 0.1px; /* For Firefox */
+    -ms-overflow-style: none; /* For Internet Explorer/Edge */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: transparent;
+  }
+}
+
+  input::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+  }
