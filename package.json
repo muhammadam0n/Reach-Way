@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "cloudinary": "^2.7.0",
+    "form-data": "^4.0.4"
+  }
+}
