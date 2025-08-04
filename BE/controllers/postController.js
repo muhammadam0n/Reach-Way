@@ -99,7 +99,7 @@ const savePost = (req, res) => {
 
             } else if (platform === 'instagram') {
                 const PAGE_ACCESS_TOKEN = await getPageToken();
-                
+
                 const formattedDate = convertToInstagramTimestamp(date, time);
                 const canProceed = validateInstagramScheduleTime(formattedDate);
                 console.log("[IMAGE]:", image);
@@ -107,20 +107,29 @@ const savePost = (req, res) => {
                 console.log("[uploaded image url]:", uploadedImageUrl);
 
                 if (canProceed?.valid) {
-                    const getInstaUserId = await getInstagramUserId(PAGE_ACCESS_TOKEN?.instagramPageId, PAGE_ACCESS_TOKEN?.pageToken);
-                    console.log("[GET INSTA USER ID]:", getInstaUserId);
+                    // const getInstaUserId = await getInstagramUserId(PAGE_ACCESS_TOKEN?.instagramPageId, PAGE_ACCESS_TOKEN?.pageToken);
+                    // console.log("[GET INSTA USER ID]:", getInstaUserId);
 
-                    // const uploadRes = await axios.post(
-                    //     `https://graph.facebook.com/v19.0/${process.env.INTA_BUS_ACC_ID}/media`,
-                    //     {
-                    //         image_url: uploadedImageUrl?.url,
-                    //         caption: description,
-                    //         published: false,
-                    //         scheduled_publish_time: formattedDate
-                    //     },
-                    //     { params: { access_token: PAGE_ACCESS_TOKEN?.pageToken } }
-                    // );
-                    // console.log("[SCHEDULED INSTA POST]:", uploadRes?.data?.error);
+                    const uploadRes = await axios.post(
+                        `https://graph.facebook.com/v19.0/${process.env.INTA_BUS_ACC_ID}/media`,
+                        {
+                            image_url: uploadedImageUrl?.url,
+                            caption: description,
+                            published: true,
+                            // scheduled_publish_time: formattedDate
+                        },
+                        { params: { access_token: PAGE_ACCESS_TOKEN?.pageToken } }
+                    );
+                    console.log("[SCHEDULED INSTA POST]:", uploadRes);
+                    const mediaId = uploadRes?.data?.id;
+
+                    const postedOnInstaResponse = await axios.post(
+                        `https://graph.facebook.com/v19.0/${process.env.INTA_BUS_ACC_ID}/media_publish`,
+                        { creation_id: mediaId },
+                        { params: { access_token: PAGE_ACCESS_TOKEN?.pageToken } }
+                    );
+
+                    console.log("[postedOnInstaResponse]:", postedOnInstaResponse?.data);
                 }
             }
 
@@ -141,7 +150,7 @@ const savePost = (req, res) => {
                     } = {}
                 } = {},
                 config: {
-                    method,
+                    // method,
                     url
                 }
             } = error;
@@ -152,7 +161,7 @@ const savePost = (req, res) => {
                 userMessage,              // User-friendly message
                 technicalDetails: message,// Developer details
                 request: {
-                    method,                 // "POST"
+                    method: "POST",                 // "POST"
                     endpoint: url.split('?')[0] // Clean URL
                 },
                 traceId: fbtrace_id       // For Facebook debugging
@@ -214,7 +223,7 @@ const convertToInstagramTimestamp = (dateString, timeString) => {
 //       `https://graph.facebook.com/v19.0/${pageId}?fields=instagram_business_account`,
 //       { params: { access_token: pageAccessToken } }
 //     );
-    
+
 //     return response.data.instagram_business_account.id;
 //   } catch (error) {
 //     console.error("Error fetching IG User ID:", error.response?.data || error.message);
