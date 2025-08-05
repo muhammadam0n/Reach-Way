@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Inputfield from "../../Components/InputField";
+import InputField from "../../Components/InputField";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "../../Components/Button";
 import { useDispatch, useSelector } from "react-redux";
@@ -61,7 +61,7 @@ const Login = () => {
 
         <div className="bg-[#00000015] dark:bg-[#fff1] rounded-xl w-full p-6">
           <form onSubmit={HandleSubmit} className="text-center py-6">
-            <Inputfield
+            <InputField
               Labelname="Email"
               values={fromData.email}
               type="email"
