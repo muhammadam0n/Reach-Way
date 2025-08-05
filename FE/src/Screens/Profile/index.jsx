@@ -85,7 +85,7 @@
 
 import React, { useState } from 'react';
 import Container from '../../Components/Container';
-import { IMAGES } from '../../Utils/Images';
+import { IMAGES } from '../../Utils/images';
 import Inputfield from '../../Components/InputField';
 import ToggleButton from './Components/ToggleButton';
 import PasswordInput from '../../Components/PasswordInput';
