@@ -2,7 +2,7 @@ import React from "react";
 import Container from "../../Components/Container";
 import AnalyticsProfileCard from "./Components/AnalyticsProfileCard";
 import PerformanceCard from "./Components/PerformanceCard";
-import { IMAGES } from "../Utils/images";
+import { IMAGES } from "../../Utils/images";
 import Chart from "./Components/Chart";
 import DropDown from "../../Components/DropDown";
 import { months } from "../../Utils/DummyData";
