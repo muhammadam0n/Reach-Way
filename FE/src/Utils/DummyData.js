@@ -168,14 +168,10 @@ export const MyIntegrations = [
     img: IMAGES.INSTA,
     name: "Instagram",
   },
-  {
-    img: IMAGES.LINKEDIN,
-    name: "Linkedin",
-  },
-  {
-    img: IMAGES.THREADS,
-    name: "Threads",
-  },
+  // {
+  //   img: IMAGES.LINKEDIN,
+  //   name: "Linkedin",
+  // },
 ];
 export const AddIntegrations = [
   {
@@ -325,13 +321,6 @@ export const sideNavItems = [
     darkImg: IMAGES.ANALYTICSDARK,
     darkActive: IMAGES.ANALYTICSDARKACTIVE,
     href: "/analytics",
-  },
-  {
-    image: IMAGES.USERSWITCH,
-    activeImg: IMAGES.USERSWITCHACTIVE,
-    darkImg: IMAGES.USERSWITCHDARK,
-    darkActive: IMAGES.USERSWITCHDARKACTIVE,
-    href: "/tracker",
   },
   {
     image: IMAGES.BOOK,

@@ -1,7 +1,7 @@
 import React from "react";
 import { IMAGES } from "../Utils/Images";
 
-function DropDown({ selectValue, onSelect, className, optionStyle, onPress, divStyle}) {
+function DropDown({selectKey, selectValue, onSelect, className, optionStyle, onPress, divStyle}) {
   const handleSelectChange = (event) => {
     const selectedOption = event.target.value;
     onSelect(selectedOption); // Notify parent about the change
@@ -22,7 +22,7 @@ function DropDown({ selectValue, onSelect, className, optionStyle, onPress, divS
       >
         {/* Default placeholder option */}
         <option value="" disabled>
-          Select Platform
+          {`Select ${selectKey}`}
         </option>
 
         {/* Map through actual values */}

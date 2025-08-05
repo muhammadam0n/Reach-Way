@@ -41,11 +41,26 @@ const postSchema = new mongoose.Schema(
       type: String,
       enum: ["post", "posted"],
       default: "post",
-    }
+    },
+        socialMediaPostId: {
+        type: String,
+        default: ""
+    },
+    mediaId: {
+        type: String, 
+        default: ""
+    },
+    scheduledDateTime: {
+        type: Date, 
+    },
+    isProcessed: {
+      type: Boolean,
+      default: false
+    },
   },
   {
-    collection: "posts", // Explicitly set collection name
-    timestamps: true, // Auto-adds `createdAt` and `updatedAt`
+    collection: "posts", 
+    timestamps: true, 
   }
 );
 

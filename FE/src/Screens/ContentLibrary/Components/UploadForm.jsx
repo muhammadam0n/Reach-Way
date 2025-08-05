@@ -326,6 +326,9 @@ const ImageUploadForm = () => {
 
   return (
     <div className="py-8">
+              <h1 className="text-2xl pb-4 font-bold">
+                Schedule a post to any platform</h1>
+
       {uploads.map((upload, index) => (
         <div
           key={index}

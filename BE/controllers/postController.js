@@ -69,7 +69,7 @@ const savePost = (req, res) => {
                 date
             });
 
-            const savedPost = await newPost.save();
+
 
             if (platform === 'facebook') {
                 const pageAccessToken = await getPageToken();
@@ -97,8 +97,11 @@ const savePost = (req, res) => {
 
                 console.log("[SCHEDULED POST]:", scheduledPost);
 
+                const savedPost = await newPost.save();
+
             } else if (platform === 'instagram') {
                 const PAGE_ACCESS_TOKEN = await getPageToken();
+                console.log("[page access token]:", PAGE_ACCESS_TOKEN?.pageToken);
 
                 const formattedDate = convertToInstagramTimestamp(date, time);
                 const canProceed = validateInstagramScheduleTime(formattedDate);
@@ -107,34 +110,41 @@ const savePost = (req, res) => {
                 console.log("[uploaded image url]:", uploadedImageUrl);
 
                 if (canProceed?.valid) {
-                    // const getInstaUserId = await getInstagramUserId(PAGE_ACCESS_TOKEN?.instagramPageId, PAGE_ACCESS_TOKEN?.pageToken);
-                    // console.log("[GET INSTA USER ID]:", getInstaUserId);
-
                     const uploadRes = await axios.post(
                         `https://graph.facebook.com/v19.0/${process.env.INTA_BUS_ACC_ID}/media`,
                         {
                             image_url: uploadedImageUrl?.url,
                             caption: description,
                             published: true,
-                            // scheduled_publish_time: formattedDate
                         },
                         { params: { access_token: PAGE_ACCESS_TOKEN?.pageToken } }
                     );
                     console.log("[SCHEDULED INSTA POST]:", uploadRes);
                     const mediaId = uploadRes?.data?.id;
 
-                    const postedOnInstaResponse = await axios.post(
-                        `https://graph.facebook.com/v19.0/${process.env.INTA_BUS_ACC_ID}/media_publish`,
-                        { creation_id: mediaId },
-                        { params: { access_token: PAGE_ACCESS_TOKEN?.pageToken } }
-                    );
+                    console.log("[FORMATTED DATE]:", formattedDate);
 
-                    console.log("[postedOnInstaResponse]:", postedOnInstaResponse?.data);
+                    const instaPost = new Post({
+                        userId,
+                        pageID,
+                        platform,
+                        postType,
+                        image: image?.path || "",
+                        scheduledDateTime: formattedDate,
+                        description,
+                        date,
+                        mediaId: mediaId
+                    });
+
+                    const savedInstaPost = instaPost.save();
+
+                    console.log("[INSTA POST]:", savedInstaPost);
                 }
             }
 
             res.status(201).json({ message: "Post saved successfully", post: newPost });
         } catch (error) {
+            console.log("[ERROR]:", error);
             const {
                 response: {
                     data: {
@@ -149,10 +159,10 @@ const savePost = (req, res) => {
                         } = {}
                     } = {}
                 } = {},
-                config: {
-                    // method,
-                    url
-                }
+                // config: {
+                //     // method,
+                //     url
+                // }
             } = error;
 
             console.error('Instagram API Failure:', {
@@ -162,7 +172,7 @@ const savePost = (req, res) => {
                 technicalDetails: message,// Developer details
                 request: {
                     method: "POST",                 // "POST"
-                    endpoint: url.split('?')[0] // Clean URL
+                    // endpoint: url.split('?')[0] // Clean URL
                 },
                 traceId: fbtrace_id       // For Facebook debugging
             });
@@ -171,6 +181,78 @@ const savePost = (req, res) => {
 };
 
 
+const fetchPostInsights = async (postId, PAGE_ACCESS_TOKEN) => {
+    try {
+        const metrics = ["post_impressions", "post_engaged_users", "post_reactions_like_total", "post_clicks"];
+        let insights = {};
+
+        for (const metric of metrics) {
+            const response = await fetch(`https://graph.facebook.com/v21.0/${postId}/insights?metric=${metric}&access_token=${PAGE_ACCESS_TOKEN}`, {
+                method: "GET"
+            });
+            const data = await response.json();
+
+            if (data?.data?.length > 0) {
+                insights[metric] = data.data[0].values[0].value || 0;
+            }
+        }
+
+        return insights;
+    } catch (err) {
+        console.log(`[ERROR FETCHING INSIGHTS FOR POST ${postId}]:`, err);
+        return {};
+    }
+};
+
+
+const getFbPagePostsService = async () => {
+    try {
+        const result = await getPageToken();
+        const PAGE_ACCESS_TOKEN = result?.pageToken;
+        console.log("[PAGE ACCESS TOKEN GENERATED]:", PAGE_ACCESS_TOKEN);
+
+        let allPosts = [];
+        let nextPageUrl = `https://graph.facebook.com/v21.0/${process.env.META_PAGE_ID}/posts?fields=id,message,created_time,comments.summary(true).limit(0),shares&access_token=${PAGE_ACCESS_TOKEN}`;
+
+        while (allPosts.length < 200) {
+            if (nextPageUrl === null) break;
+            console.log("[next page url]:", nextPageUrl);
+            const postsResponse = await fetch(nextPageUrl, { method: "GET" });
+            const postsData = await postsResponse.json();
+
+            if (!postsData?.data) break;
+
+            const postsWithInsights = await Promise.all(
+                postsData.data.map(async (post) => {
+                    const insights = await fetchPostInsights(post.id, PAGE_ACCESS_TOKEN);
+                    return { ...post, insights };
+                })
+            );
+
+            allPosts.push(...postsWithInsights);
+
+            nextPageUrl = postsData?.paging?.next || null;
+            console.log(`[FETCHED ${allPosts.length} POSTS SO FAR]`);
+
+
+        }
+
+        console.log("[ALL POSTS]:", allPosts);
+
+        return {
+            status: 200,
+            message: "Successfully fetched all posts with insights.",
+            posts: allPosts
+        };
+    } catch (err) {
+        console.log("[ERROR FETCHING FACEBOOK POSTS]:", err);
+        return {
+            status: 500,
+            message: "Couldn't fetch Facebook posts.",
+            posts: []
+        };
+    }
+};
 
 const getPosts = async (req, res) => {
     try {
@@ -447,4 +529,5 @@ async function scheduleFacebookPost({
 module.exports = {
     savePost,
     getPosts,
+    getFbPagePostsService
 };
