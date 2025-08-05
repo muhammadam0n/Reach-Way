@@ -3,7 +3,7 @@ import Inputfield from "../../../Components/InputField";
 import { carddata } from "../../../Utils/DummyData";
 import moment from "moment";
 import CardCalendar from "./CardCalendar";
-import { IMAGES } from "../../../Utils/Images";
+import { IMAGES } from "../../../Utils/images";
 
 const Calendar = () => {
   const today = moment();
