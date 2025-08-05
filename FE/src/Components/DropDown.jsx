@@ -1,5 +1,5 @@
 import React from "react";
-import { IMAGES } from "../Utils/Images";
+import { IMAGES } from "../Utils/images";
 
 function DropDown({selectKey, selectValue, onSelect, className, optionStyle, onPress, divStyle}) {
   const handleSelectChange = (event) => {

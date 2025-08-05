@@ -315,13 +315,13 @@ export const sideNavItems = [
 
   //   href: "/calendar",
   // },
-  // {
-  //   image: IMAGES.ANALYTICS,
-  //   activeImg: IMAGES.ANALYTICSACTIVE,
-  //   darkImg: IMAGES.ANALYTICSDARK,
-  //   darkActive: IMAGES.ANALYTICSDARKACTIVE,
-  //   href: "/analytics",
-  // },
+  {
+    image: IMAGES.ANALYTICS,
+    activeImg: IMAGES.ANALYTICSACTIVE,
+    darkImg: IMAGES.ANALYTICSDARK,
+    darkActive: IMAGES.ANALYTICSDARKACTIVE,
+    href: "/analytics",
+  },
   {
     image: IMAGES.BOOK,
     activeImg: IMAGES.BOOKACTIVE,

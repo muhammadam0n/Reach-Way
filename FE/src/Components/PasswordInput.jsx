@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { IMAGES } from "../utils/Images";
+import { IMAGES } from "../Utils/images";
 
 const PasswordInput = ({
   label,

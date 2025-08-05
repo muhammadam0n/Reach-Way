@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import Container from "../../Components/Container";
-import { IMAGES } from "../../utils/Images";
+import { IMAGES } from "../Utils/images";
 import { AddIntegrations, MyIntegrations } from "../../Utils/DummyData";
 import { useSelector } from "react-redux";
 

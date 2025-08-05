@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { sideNavItems } from "../Utils/DummyData";
-// import { IMAGES } from "../Utils/Images";
+import { IMAGES } from "../Utils/images";
 import { useSelector } from "react-redux";
 
 const SideNav = ({ menu, setMenu }) => {

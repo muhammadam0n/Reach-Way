@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import SideNav from "./SideNav";
-import { IMAGES } from "../utils/Images";
+import { IMAGES } from "../Utils/images";
 import InputField from "./InputField";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { useNavigate } from "react-router-dom";

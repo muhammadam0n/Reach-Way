@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { IMAGES } from "../Utils/Images";
+import { IMAGES } from "../Utils/images";
 
 const CheckBox = () => {
   const [isChecked, setIsChecked] = useState(true);
