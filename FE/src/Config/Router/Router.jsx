@@ -12,6 +12,8 @@ import Signup from "../../Screens/SignUp";
 import HelpSupport from "../../Screens/Help&Support";
 import Profile from "../../Screens/Profile";
 import ProtectedRoute from "./ProtectedRoutes";
+import AIImageStudio from "../../Screens/AIImageStudio";
+// import QueueManager from "../../Screens/QueueManager";
 
 // export const router = createBrowserRouter([
 //   {
@@ -101,6 +103,14 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
+  // {
+  //   path: "/queue-manager",
+  //   element: (
+  //     <ProtectedRoute>
+  //       <QueueManager />
+  //     </ProtectedRoute>
+  //   ),
+  // },
   {
     path: "/bulkupload",
     element: (
@@ -146,6 +156,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Profile />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/ai-image-studio",
+    element: (
+      <ProtectedRoute>
+        <AIImageStudio />
       </ProtectedRoute>
     ),
   },

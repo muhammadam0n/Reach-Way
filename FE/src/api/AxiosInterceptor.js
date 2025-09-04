@@ -62,8 +62,9 @@ const handleRequestError = (error) => {
     const status = error.response.status;
     const responseData = error.response.data;
     if (responseData.error) {
-      checkUnAuth(responseData.error.messages[0]);
-      throw new HttpError(responseData.error.messages[0], status);
+      const errorMessage = responseData.error.messages?.[0] || responseData.error.message || responseData.error;
+      checkUnAuth(errorMessage);
+      throw new HttpError(errorMessage, status);
     } else if (responseData.errors || responseData.message) {
       checkUnAuth(responseData.message);
       throw new HttpError(responseData.message, status, responseData.errors);

@@ -22,7 +22,7 @@ function DropDown({selectKey, selectValue, onSelect, className, optionStyle, onP
       >
         {/* Default placeholder option */}
         <option value="" disabled>
-          {`Select ${selectKey}`}
+          {`Select ${selectKey || 'Option'}`}
         </option>
 
         {/* Map through actual values */}
@@ -37,7 +37,7 @@ function DropDown({selectKey, selectValue, onSelect, className, optionStyle, onP
         ))}
       </select>
 
-      <div class="absolute inset-y-0 right-[15px] flex items-center pointer-events-none">
+      <div className="absolute inset-y-0 right-[15px] flex items-center pointer-events-none">
         <img src={IMAGES.DROPDOWN} className="md:w-4 md:h-2 w-2 h-2" />
       </div>
     </div>

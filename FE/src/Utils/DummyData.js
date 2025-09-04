@@ -168,10 +168,22 @@ export const MyIntegrations = [
     img: IMAGES.INSTA,
     name: "Instagram",
   },
-  // {
-  //   img: IMAGES.LINKEDIN,
-  //   name: "Linkedin",
-  // },
+  {
+    img: IMAGES.LINKEDIN,
+    name: "LinkedIn",
+  },
+  {
+    img: IMAGES.TWITTER,
+    name: "Twitter",
+  },
+  {
+    img: IMAGES.TIKTOK,
+    name: "TikTok",
+  },
+  {
+    img: "https://cdn-icons-png.flaticon.com/512/3670/3670157.png",
+    name: "Reddit",
+  },
 ];
 export const AddIntegrations = [
   {
@@ -181,6 +193,18 @@ export const AddIntegrations = [
   {
     img: IMAGES.DISCORD,
     name: "Discord",
+  },
+  {
+    img: "https://cdn-icons-png.flaticon.com/512/3670/3670157.png",
+    name: "Reddit",
+  },
+  {
+    img: IMAGES.LINKEDIN,
+    name: "LinkedIn",
+  },
+  {
+    img: IMAGES.TWITTER,
+    name: "Twitter",
   },
 ];
 // Integrations Page
@@ -330,20 +354,34 @@ export const sideNavItems = [
     href: "/content-library",
   },
   {
+    image: IMAGES.CAMRAICON,
+    activeImg: IMAGES.CAMRAICON,
+    darkImg: IMAGES.CAMRAICON,
+    darkActive: IMAGES.CAMRAICON,
+    href: "/ai-image-studio",
+  },
+  {
     image: IMAGES.UPLOADFILE,
     activeImg: IMAGES.UPLOADFILEACTIVE,
     darkImg: IMAGES.UPLOADFILEDARK,
     darkActive: IMAGES.UPLOADFILEDARKACTIVE,
     href: "/bulkupload",
   },
-  {
-    image: IMAGES.CHAIN,
-    activeImg: IMAGES.CHAINACTIVE,
-    darkImg: IMAGES.CHAINDARK,
-    darkActive: IMAGES.CHAINDARKACTIVE,
+  // {
+  //   image: IMAGES.CHAIN,
+  //   activeImg: IMAGES.CHAINACTIVE,
+  //   darkImg: IMAGES.CHAINDARK,
+  //   darkActive: IMAGES.CHAINDARKACTIVE,
 
-    href: "/integrations",
-  },
+  //   href: "/integrations",
+  // },
+  // {
+  //   image: IMAGES.UPLOADFILE,
+  //   activeImg: IMAGES.UPLOADFILEACTIVE,
+  //   darkImg: IMAGES.UPLOADFILEDARK,
+  //   darkActive: IMAGES.UPLOADFILEDARKACTIVE,
+  //   href: "/queue-manager",
+  // },
   {
     image: IMAGES.LINEWHITE,
     activeImg: IMAGES.LINEACTIVE,

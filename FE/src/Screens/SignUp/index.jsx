@@ -8,6 +8,7 @@ import ENDPOINTS from '../../Utils/Endpoints'
 import { showToast } from '../../Components/Toast'
 import PasswordInput from '../../Components/PasswordInput'
 
+
 const Signup = () => {
 
     const theme = useSelector((state) => state.theme.theme);
@@ -56,19 +57,16 @@ const Signup = () => {
         }
     }
 
-
-
-
-
     return (
-        <div className='bg-background dark:bg-backgroundDark bg-no-repeat bg-cover w-full flex items-center h-screen  justify-center dark:text-whiteColor' >
-            <div className=' text-center lg:w-[30%] w-[80%] md:py-6 py-2'>
-                <h2 className='subheading font-medium md:py-' >Signup</h2>
+        <div className='bg-background dark:bg-backgroundDark bg-no-repeat bg-cover w-full flex items-center h-screen justify-center dark:text-whiteColor'>
+            <div className='text-center lg:w-[30%] w-[80%] md:py-6 py-2'>
+                <h2 className='subheading font-medium md:py-6 text-3xl'>Create Account</h2>
+                <p className="text-gray-400 dark:text-gray-300 mb-8 text-sm">
+                    Join REACH WAY and simplify your marketing
+                </p>
 
-                <div className='bg-[#00000015] dark:bg-[#fff1] rounded-xl w-full p-6 mt-6'>
-
-                    <form onSubmit={HandleSubmit} className='text-center ' >
-
+                <div className='bg-[#00000015] dark:bg-[#fff1] rounded-xl w-full p-8 mt-6 shadow-lg backdrop-blur-sm'>
+                    <form onSubmit={HandleSubmit} className='text-center'>
                         <Inputfield
                             Labelname="First Name"
                             values={fromData.firstName}
@@ -77,7 +75,7 @@ const Signup = () => {
                             name="firstName"
                             htmlFor="firstName"
                             labelstyle="text8"
-                            inputStyle="p-4 lg:w-[70%] w-full mt-2 mx-auto rounded-full placeholder:text-gray bg-gray2 text-black "
+                            inputStyle="p-4 lg:w-[70%] w-full mt-2 mx-auto rounded-full placeholder:text-gray bg-gray2 text-black dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 border border-gray-200 dark:border-gray-600 focus:border-primaryColor focus:ring-2 focus:ring-primaryColor focus:ring-opacity-20 transition-all duration-200"
                             divstyle="w-full"
                             onChange={(e) => setFormData({ ...fromData, firstName: e.target.value })}
                         />
@@ -89,7 +87,7 @@ const Signup = () => {
                             name="lastName"
                             htmlFor="lastName"
                             labelstyle="text8"
-                            inputStyle="p-4 lg:w-[70%] w-full mt-2 mx-auto rounded-full placeholder:text-gray bg-gray2 text-black "
+                            inputStyle="p-4 lg:w-[70%] w-full mt-2 mx-auto rounded-full placeholder:text-gray bg-gray2 text-black dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 border border-gray-200 dark:border-gray-600 focus:border-primaryColor focus:ring-2 focus:ring-primaryColor focus:ring-opacity-20 transition-all duration-200"
                             divstyle="w-full md:mt-4 mt-4"
                             onChange={(e) => setFormData({ ...fromData, lastName: e.target.value })}
                         />
@@ -101,12 +99,12 @@ const Signup = () => {
                             name="email"
                             htmlFor="email"
                             labelstyle="text8"
-                            inputStyle="p-4 lg:w-[70%] w-full mt-2 mx-auto rounded-full placeholder:text-gray bg-gray2 text-black "
+                            inputStyle="p-4 lg:w-[70%] w-full mt-2 mx-auto rounded-full placeholder:text-gray bg-gray2 text-black dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 border border-gray-200 dark:border-gray-600 focus:border-primaryColor focus:ring-2 focus:ring-primaryColor focus:ring-opacity-20 transition-all duration-200"
                             divstyle="w-full md:mt-4 mt-4"
                             onChange={(e) => setFormData({ ...fromData, email: e.target.value })}
                         />
                         <PasswordInput
-                            imageStyle={`lg:w-8  w-4  md:mr-20 mr-4 md:mt-2 mt-4`}
+                            imageStyle={`lg:w-8 w-4 md:mr-20 mr-4 md:mt-2 mt-4`}
                             Labelname="Password"
                             values={fromData.password}
                             type="password"
@@ -114,26 +112,24 @@ const Signup = () => {
                             name="password"
                             htmlFor="password"
                             labelstyle="text8"
-                            inputStyle="p-4 lg:w-[70%] w-full mt-2 mx-auto rounded-full placeholder:text-gray bg-gray2 text-black "
+                            inputStyle="p-4 lg:w-[70%] w-full mt-2 mx-auto rounded-full placeholder:text-gray bg-gray2 text-black dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 border border-gray-200 dark:border-gray-600 focus:border-primaryColor focus:ring-2 focus:ring-primaryColor focus:ring-opacity-20 transition-all duration-200"
                             divstyle="w-full md:mt-4 mt-4"
                             onChange={(e) => setFormData({ ...fromData, password: e.target.value })}
                         />
-                        <div className='py-4 text-lightblueColor dark:text-cgreen text12'>
-                            <Link to={-1} >
-                                Already have an Account
+                        <div className='py-6 text-lightblueColor dark:text-cgreen text12'>
+                            <Link to={-1} className="hover:underline transition-colors duration-200">
+                                Already have an account?
                             </Link>
                         </div>
 
-                        <div className='md:py-4 py-1' >
+                        <div className='md:py-6 py-2'>
                             <Button
-                                btnname="Sign Up"
-                                btnStyle="px-20 py-3 text11 rounded-full  bg-primaryColor text-whiteColor"
+                                btnname="Create Account"
+                                btnStyle="px-20 py-4 text11 rounded-full bg-primaryColor text-whiteColor hover:bg-primaryColor/90 transform hover:scale-105 transition-all duration-200 font-semibold shadow-lg"
                             />
                         </div>
                     </form>
-
                 </div>
-
             </div>
         </div>
     )

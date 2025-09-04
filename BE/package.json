@@ -1,16 +1,20 @@
 {
-  "name": "food",
+  "name": "reach-way-backend",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "dev": "nodemon server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "echo 'Backend build completed'",
+    "test": "echo 'No tests specified'"
   },
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Reach-Way Backend API Server",
   "dependencies": {
-    "axios": "^0.27.2",
-    "bcrypt": "^5.1.1",
+    "axios": "^1.11.0",
+    "bcrypt": "^6.0.0",
+    "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
@@ -22,5 +26,9 @@
     "nodemon": "^3.1.10",
     "pdfkit": "^0.16.0",
     "sequelize": "^6.37.5"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
   }
 }

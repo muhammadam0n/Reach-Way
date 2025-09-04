@@ -8,9 +8,9 @@ export default {
     },
     extend: {
       backgroundImage: {
-        background: "url('../public/images/bg.png')",
-        backgroundDark: "url('../public/images/backgrouddark.png')",
-        backgroundAuth: "url('../public/images/authbg.png')",
+        background: "url('/images/bg.png')",
+        backgroundDark: "url('/images/backgrouddark.png')",
+        backgroundAuth: "url('/images/authbg.png')",
       },
       keyframes: {
         scroll: {
@@ -38,6 +38,14 @@ export default {
         grayColor: "#B3B3B3",
         gray2: "#F4F4F4",
         gray3: "#BBBBBB",
+        // Add missing colors used in components
+        background: "#ffffff",
+        backgroundDark: "#1a1a1a",
+        black: "#000000",
+        text8: "text-lg",
+        text11: "text-sm",
+        text12: "text-xs",
+        text13: "text-sm",
       },
       screens: {
         xl: "1240px",

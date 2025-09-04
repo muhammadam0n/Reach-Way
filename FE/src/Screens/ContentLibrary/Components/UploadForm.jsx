@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Inputfield from "../../../Components/InputField";
 import Button from "../../../Components/Button";
 import { IMAGES } from "../../../Utils/images";
@@ -33,6 +33,84 @@ const ImageUploadForm = () => {
   const [postType, setPostType] = useState("page");
   const [image, setImage] = useState(null);
 
+  // Read queue preferences from localStorage
+  const getQueuePrefs = () => {
+    try {
+      const raw = localStorage.getItem("queue_prefs");
+      if (!raw) return null;
+      const prefs = JSON.parse(raw);
+      return {
+        strategy: prefs?.strategy === "next" ? "next" : "last",
+        intervalMin: Math.max(5, Number(prefs?.intervalMin) || 60),
+        startTime: typeof prefs?.startTime === "string" ? prefs.startTime : "",
+      };
+    } catch (_) {
+      return null;
+    }
+  };
+
+  const fetchExistingFuturePosts = async () => {
+    try {
+      const res = await api.get({ url: ENDPOINTS.OTHER.GET_POSTS });
+      const now = new Date();
+      return Array.isArray(res)
+        ? res.filter((p) => p?.scheduledDateTime && new Date(p.scheduledDateTime) > now)
+        : [];
+    } catch (_) {
+      return [];
+    }
+  };
+
+  const computeQueueTimes = async (numItems) => {
+    const prefs = getQueuePrefs();
+    const interval = (prefs?.intervalMin || 60) * 60000;
+    const future = await fetchExistingFuturePosts();
+    const now = new Date();
+    let base;
+    if (prefs?.strategy === "next") {
+      base = new Date(now.getTime() + interval);
+    } else {
+      const last = future.sort((a,b) => new Date(a.scheduledDateTime) - new Date(b.scheduledDateTime))[future.length - 1]?.scheduledDateTime;
+      base = last ? new Date(last) : new Date(now.getTime() + interval);
+    }
+    const times = [];
+    let cursor = new Date(base);
+    for (let i = 0; i < numItems; i++) {
+      let d = new Date(cursor);
+      if (prefs?.startTime) {
+        const [hh, mm] = prefs.startTime.split(":").map((n) => Number(n) || 0);
+        d.setHours(hh, mm, 0, 0);
+        if (d <= now) d.setDate(d.getDate() + 1);
+      }
+      const yyyy = d.getFullYear();
+      const mm2 = String(d.getMonth() + 1).padStart(2, '0');
+      const dd2 = String(d.getDate()).padStart(2, '0');
+      const HH = String(d.getHours()).padStart(2, '0');
+      const MM = String(d.getMinutes()).padStart(2, '0');
+      times.push({ date: `${yyyy}-${mm2}-${dd2}`, time: `${HH}:${MM}` });
+      cursor = new Date(cursor.getTime() + interval);
+    }
+    return times;
+  };
+
+  // Auto-draft from AI Image Studio if available
+  useEffect(() => {
+    try {
+      const draft = localStorage.getItem("draft_ai_image");
+      if (draft) {
+        fetch(draft)
+          .then(res => res.blob())
+          .then(blob => {
+            const file = new File([blob], "ai-image.png", { type: blob.type || "image/png" });
+            const drafted = { file, url: draft, type: "image" };
+            setFormData(prev => ({ ...prev, image: [drafted], type: "image" }));
+            setImage(file);
+          })
+          .finally(() => { try { localStorage.removeItem("draft_ai_image"); } catch (_) {} });
+      }
+    } catch (_) {}
+  }, []);
+
   const fbAuthData = localStorage.getItem("fbAccountInfo")
   const parseFbAuthData = JSON.parse(fbAuthData)
 
@@ -46,8 +124,214 @@ const ImageUploadForm = () => {
   const [uploads, setUploads] = useState([]); // Array to store uploaded images and descriptions
   const [showForm, setShowForm] = useState(true); // Toggle form visibility
   const [isLoading, setIsLoading] = useState(false); // Add loading state
+  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false); // Add image analysis loading state
+  const [imageAnalysisComplete, setImageAnalysisComplete] = useState(false); // Track if image analysis is complete
+  const [aiOptions, setAiOptions] = useState([]); // AI suggestion options
 
-  const handleImageChange = (e) => {
+  const extractAiOptions = (rawText) => {
+    if (!rawText || typeof rawText !== 'string') return [];
+    let text = rawText
+      .replace(/```[\s\S]*?```/g, " ")
+      .replace(/\*\*/g, '')
+      .replace(/>\s*/g, '')
+      .trim();
+    // Split by Option headings
+    let parts = text.split(/Option\s*\d+[^\n:]*:?/gi).map(p => p.trim()).filter(Boolean);
+    if (parts.length <= 1) {
+      // Fallback: split by blank lines
+      parts = text.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
+    }
+    // Take the first sentence/paragraph per part, clamp length
+    const sanitized = parts.map(p => {
+      const para = p.split(/\n+/).filter(Boolean)[0] || p;
+      return para.replace(/^[-*•]\s*/, '').trim();
+    }).filter(Boolean);
+    // Deduplicate and cap
+    const unique = Array.from(new Set(sanitized)).slice(0, 6);
+    return unique;
+  };
+
+  // Function to convert image to base64 for API calls
+  const convertImageToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Function to test API key connection
+  const testAPIKey = async () => {
+    try {
+      const apiKey = import.meta.env.VITE_API_KEY;
+      console.log('API Key found:', apiKey ? 'Yes' : 'No');
+      console.log('API Key value:', apiKey);
+      
+      if (!apiKey) {
+        showToast({ 
+          message: "API key not found. Please create a .env file with VITE_API_KEY", 
+          isError: true 
+        });
+        return;
+      }
+
+      showToast({ 
+        message: "Testing API key connection...", 
+        isError: false 
+      });
+
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+      console.log('API URL:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: "Hello, this is a test message to verify the API key is working.",
+                },
+              ],
+            },
+          ],
+        }),
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Success response:', data);
+        showToast({ 
+          message: "✅ API key is working! You can now upload images for AI analysis.", 
+          isError: false 
+        });
+      } else {
+        const errorData = await response.json();
+        console.error('Error response:', errorData);
+        throw new Error(errorData.error?.message || 'API test failed');
+      }
+    } catch (error) {
+      console.error('API test error:', error);
+      showToast({ 
+        message: `API test failed: ${error.message}`, 
+        isError: true 
+      });
+    }
+  };
+
+  // Function to analyze image with AI and generate description
+  const analyzeImageWithAI = async (imageFile) => {
+    try {
+      setIsAnalyzingImage(true);
+      
+      // Validate image file
+      if (!imageFile || !imageFile.type.startsWith('image/')) {
+        throw new Error('Invalid image file. Please select a valid image.');
+      }
+      
+      // Check file size (limit to 10MB for API efficiency)
+      if (imageFile.size > 10 * 1024 * 1024) {
+        throw new Error('Image file too large. Please use images under 10MB.');
+      }
+      
+      // Check if API key is available
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error('Gemini API key not found. Please check your environment configuration.');
+      }
+      
+      // Convert image to base64
+      const base64Image = await convertImageToBase64(imageFile);
+      
+      // Use Gemini API with image analysis
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+      
+      const prompt = `Analyze this image and provide a detailed, engaging description suitable for social media. 
+      Focus on:
+      - What you see in the image
+      - The mood/atmosphere
+      - Any text or objects present
+      - Colors and visual elements
+      - Make it engaging and social media friendly
+      Keep it under 200 characters and make it compelling for social media engagement.`;
+      
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt,
+                },
+                {
+                  inline_data: {
+                    mime_type: imageFile.type,
+                    data: base64Image
+                  }
+                }
+              ],
+            },
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Failed to analyze image');
+      }
+
+      const data = await response.json();
+      
+      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+        throw new Error('Invalid response from AI service');
+      }
+      
+      const generatedText = data.candidates[0].content.parts[0].text;
+      const options = extractAiOptions(generatedText);
+      setAiOptions(options);
+      setImageAnalysisComplete(true);
+      
+      showToast({ 
+        message: "AI has analyzed your image and generated a description!", 
+        isError: false 
+      });
+      
+    } catch (error) {
+      console.error('Error analyzing image:', error);
+      
+      let errorMessage = "Failed to analyze image. Please try again or write description manually.";
+      
+      if (error.message.includes('API key')) {
+        errorMessage = "API key not configured. Please check your environment settings.";
+      } else if (error.message.includes('Invalid image file')) {
+        errorMessage = error.message;
+      } else if (error.message.includes('Image file too large')) {
+        errorMessage = error.message;
+      } else if (error.message.includes('Invalid response')) {
+        errorMessage = "AI service returned an invalid response. Please try again.";
+      }
+      
+      showToast({ 
+        message: errorMessage, 
+        isError: true 
+      });
+    } finally {
+      setIsAnalyzingImage(false);
+    }
+  };
+
+  const handleImageChange = async (e) => {
     const files = Array.from(e.target.files);
 
     if (files.length > 0) {
@@ -62,6 +346,14 @@ const ImageUploadForm = () => {
         image: [...prev.image, ...updatedImages],
         type: "image", // Optional, based on first image type or override later
       }));
+
+      // Reset analysis complete flag for new images
+      setImageAnalysisComplete(false);
+
+      // Automatically analyze the first image if it's an image file
+      if (files[0] && files[0].type.startsWith('image/')) {
+        await analyzeImageWithAI(files[0]);
+      }
     }
   };
 
@@ -73,59 +365,58 @@ const ImageUploadForm = () => {
 
   const handleAdd = async (e) => {
     e.preventDefault();
-    if (!formData.platForm || !formData.description?.trim() || !formData.image || !formData.date) {
+    if (!formData.platForm || !formData.description?.trim() || !formData.image) {
       showToast({
-        message: "Please fill in all required fields: Platform, Pages, Description, Image, and Date.",
+        message: "Please fill in all required fields: Platform, Pages, Description, and Image.",
         isError: true,
       });
       return; // Prevent form submission
     }
-    // if (edit) {
-    //   const updatedUploads = [...uploads];
-    //   updatedUploads[editIndex] = formData; // Update the selected item
-    //   setUploads(updatedUploads);
-    //   setEdit(false);
-    //   setEditIndex(null);
-    // } else {
-    //   setUploads([...uploads, formData]); // Add new item
-    // }
     const userId = localStorage.getItem("userId");
-    const form = new FormData();
-
-    form.append("image", formData.image[0]?.file);
-    form.append("description", formData.description);
-    form.append("date", formData.date);
-    form.append("platform", formData.platForm);
-    form.append("tags", formData.tags);
-    form.append("postType", formData.type);
-    form.append("time",formData.time);
-    form.append("userId", parse_user?._id);
-    form.append("selectedPages", selectedPages);
-    // form.append("postId", postId); // if needed
+    const images = formData.image || [];
     try {
-      const response = await api.post({
-        url: `${ENDPOINTS.OTHER.ADD_POST}`,
-        data: form,
-        config: {
-          headers: { "Content-Type": "multipart/form-data" }, // optional, axios handles this if not manually set
-        },
-        isFile: true,
-      });
-
-      if (response) {
-        showToast({ message: response.message, isError: false });
-        setFormData({
-          image: [],
-          description: "",
-          platForm: "",
-          tags: "",
-          type: "",
-          date: "",
-          time: "",
-        });
-        setShowForm(false);
-        setTimeout(() => setShowForm(true), 0);
+      let schedulePlan = [];
+      if (images.length > 1) {
+        schedulePlan = await computeQueueTimes(images.length);
+      } else if (formData.date && formData.time) {
+        schedulePlan = [{ date: formData.date, time: formData.time }];
+      } else {
+        schedulePlan = await computeQueueTimes(1);
       }
+
+      for (let i = 0; i < images.length; i++) {
+        const img = images[i];
+        const { date, time } = schedulePlan[Math.min(i, schedulePlan.length - 1)];
+        const form = new FormData();
+        form.append("image", img?.file);
+        form.append("description", formData.description);
+        form.append("date", date);
+        form.append("platform", formData.platForm);
+        form.append("tags", formData.tags);
+        form.append("postType", formData.type || "image");
+        form.append("time", time);
+        form.append("userId", parse_user?._id);
+        form.append("selectedPages", selectedPages);
+        await api.post({
+          url: `${ENDPOINTS.OTHER.ADD_POST}`,
+          data: form,
+          config: { headers: { "Content-Type": "multipart/form-data" } },
+          isFile: true,
+        });
+      }
+
+      showToast({ message: "Queued posts created successfully", isError: false });
+      setFormData({
+        image: [],
+        description: "",
+        platForm: "",
+        tags: "",
+        type: "",
+        date: "",
+        time: "",
+      });
+      setShowForm(false);
+      setTimeout(() => setShowForm(true), 0);
     } catch (error) {
       console.log(error.message);
       showToast({ message: error.message, isError: true });
@@ -327,7 +618,28 @@ const ImageUploadForm = () => {
   return (
     <div className="py-8">
               <h1 className="text-2xl pb-4 font-bold">
-                Schedule a post to any platform</h1>
+                Schedule a post to any platform
+              </h1>
+              
+                             {/* AI Feature Info */}
+               <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
+                 <div className="flex items-start gap-3">
+                   <div className="text-blue-600 text-xl">🚀</div>
+                   <div className="flex-1">
+                     <h3 className="text-blue-800 font-medium mb-1">New AI-Powered Image Analysis</h3>
+                     <p className="text-blue-700 text-sm">
+                       Upload an image and AI will automatically generate engaging descriptions for your social media posts. 
+                       Simply drag and drop an image to get started!
+                     </p>
+                   </div>
+                   <button
+                     onClick={testAPIKey}
+                     className="hidden px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+                   >
+                     Test API Key
+                   </button>
+                 </div>
+               </div>
 
       {uploads.map((upload, index) => (
         <div
@@ -364,15 +676,84 @@ const ImageUploadForm = () => {
             imageUrls={formData.image}
             fileize={true}
           />
+          
+          {/* AI Image Analysis Status */}
+          {isAnalyzingImage && (
+            <div className="xl:w-[62%] w-full mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                <div className="flex-1">
+                  <span className="text-blue-700 text-sm font-medium">AI is analyzing your image...</span>
+                  <div className="text-blue-600 text-xs mt-1">
+                    Analyzing visual content, objects, colors, and mood to create an engaging description
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* AI Analysis Success Indicator */}
+          {imageAnalysisComplete && aiOptions.length > 0 && (
+            <div className="xl:w-[62%] w-full mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="text-green-600 text-xl">✅</div>
+                <div className="flex-1">
+                  <span className="text-green-700 text-sm font-medium">Image analysis complete!</span>
+                  <div className="text-green-600 text-xs mt-1">Choose one suggestion below to use as your description.</div>
+                </div>
+              </div>
+              <div className="mt-3 space-y-2">
+                {aiOptions.map((opt, idx) => (
+                  <div key={idx} className="p-3 bg-white border border-green-200 rounded">
+                    <p className="text-sm text-gray-800 mb-2">{opt}</p>
+                    <button
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, description: opt }));
+                        setWordCount(opt.length);
+                        setAiOptions([]);
+                      }}
+                      className="px-3 py-1 rounded bg-green-600 text-white text-xs"
+                    >
+                      Use this
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
           {/* {textarea} */}
           <div className="xl:w-[62%] w-full relative md:mt-10 mt-4">
-            <div className="relative md:h-[350px] h-[250px] custom-scroll border border-gray rounded-lg shadow-xl  px-4 py-6 bg-white ">
+            {/* AI Description Indicator */}
+            {formData.description && (
+              <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-600 text-sm font-medium">🤖 AI-Generated Description</span>
+                    <span className="text-xs text-green-500">(You can edit this description)</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setFormData(prev => ({ ...prev, description: "" }));
+                      setWordCount(0);
+                      setImageAnalysisComplete(false);
+                    }}
+                    className="text-xs text-red-500 hover:text-red-700 underline"
+                  >
+                    Clear Description
+                  </button>
+                </div>
+                <p className="text-sm text-green-700">{formData.description}</p>
+              </div>
+            )}
+            
+            <div className="relative md:h=[350px] h-[250px] custom-scroll border border-gray rounded-lg shadow-xl  px-4 py-6 bg-white ">
               <textarea
                 onChange={handleDescriptionChange}
                 minLength={10}
                 value={formData.description}
                 maxLength={2000}
-                placeholder="Description"
+                placeholder="Description will be auto-generated when you upload an image, or write your own description here..."
                 className="w-full h-full text11 placeholder:text-gray3 scroll-m-2 resize-none border-none outline-none pr-8"
                 defaultValue={formData.description}
               ></textarea>
@@ -453,27 +834,28 @@ const ImageUploadForm = () => {
 
           </div>
 
-          <div className="flex  items-center md:flex-row flex-col md:gap-3 gap-2">
-            <div className="xl:w-[46%] w-full flex items-center justify-center border bg-whiteColor border-gray rounded-lg shadow-custom">
-              <p className="text12 border w-fit py-3 px-4 rounded-lg bg-lightblueColor dark:bg-cgreen text-whiteColor">
-                Tags
-              </p>
-              <Inputfield
-                type={"text"}
-                inputStyle="p-2 px-4 rounded-lg w-full text10"
-                divstyle={"w-full"}
-                onChange={(e) =>
-                  setFormData({ ...formData, tags: e.target.value })
-                }
-                defaultValue={formData.tags}
-              />
-            </div>
-
+          <div className="flex items-center justify-between md:gap-3 gap-2">
+            <div className="flex-1" />
             <div className="flex items-center md:flex-row flex-col md:gap-3 gap-2 md:pb-0 pb-20">
+              {/* Manual Image Analysis Button */}
+              {formData.image.length > 0 && formData.image[0]?.type === 'image' && (
+                <Button
+                  onPress={() => {
+                    setImageAnalysisComplete(false);
+                    analyzeImageWithAI(formData.image[0].file);
+                  }}
+                  btnStyle={
+                    "px-2 py-3 md:w-[180px] sm:w-[180px] w-[180px] text12 rounded-lg bg-green-600 hover:bg-green-700 text-whiteColor"
+                  }
+                  btnname={isAnalyzingImage ? 'Analyzing...' : 'Analyze Image'}
+                  disabled={isAnalyzingImage}
+                />
+              )}
+              
               <Button
                 onPress={handleGenerateWithAI}
                 btnStyle={
-                  "px-2 py-3 md:w-[200px] sm:w-[664px] w-[240px] text12  rounded-lg bg-blueColor dark:bg-cgreen text-whiteColor"
+                  "px-2 py-3 md:w-[200px] sm:w-[200px] w-[200px] text12  rounded-lg bg-blueColor dark:bg-cgreen text-whiteColor"
                 }
                 btnname={isLoading ? 'Generating...' : 'Generate with AI'}
               />
@@ -487,7 +869,7 @@ const ImageUploadForm = () => {
               <Button
                 btnname={edit ? "Update" : "Add"}
                 btnStyle={
-                  "px-2 py-3 md:w-[96px] sm:w-[664px] w-[240px] text12  rounded-lg bg-blueColor dark:bg-cgreen text-whiteColor"
+                  "px-2 py-3 md:w-[96px] sm:w-[96px] w-[120px] text12  rounded-lg bg-blueColor dark:bg-cgreen text-whiteColor"
                 }
                 onPress={handleAdd}
               />

@@ -14,6 +14,21 @@ const Container = ({ children, search }) => {
   const [menu, setMenu] = React.useState(false);
   const [open, setOpen] = React.useState(false);
   const theme = useSelector((state) => state.theme.theme);
+  const authUser = useSelector((state) => state.auth?.user);
+
+  const displayName = React.useMemo(() => {
+    try {
+      if (authUser && typeof authUser === 'object') {
+        return authUser?.name || authUser?.username || authUser?.email || 'User';
+      }
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return parsed?.name || parsed?.username || parsed?.email || 'User';
+      }
+    } catch (_) {}
+    return 'User';
+  }, [authUser]);
 
   useEffect(() => {
     if (theme === "dark") {
@@ -30,10 +45,6 @@ const Container = ({ children, search }) => {
     navigation("/");
     showToast({ message: "Logout Successfully", isError: false });
   };
-
-
-
-
 
   return (
     <div
@@ -88,11 +99,11 @@ const Container = ({ children, search }) => {
                 className="lg:w-8 md:w-8 w-6 object-contain"
               />
               <span className="text12  text-whiteColor md:block hidden">
-                User Workplace
+                {displayName}
               </span>
               <MdOutlineKeyboardArrowDown
-                className={`lg:w-6 md:w-6 ${open ? "rotate-180" : ""
-                  } w-5 lg:h-7 md:h-6 h-5 object-contain text-whiteColor md:block hidden`}
+                className={`lg:w-6 md:w-6 ${open ? "rotate-180" : ""}
+                  w-5 lg:h-7 md:h-6 h-5 object-contain text-whiteColor md:block hidden`}
               />
             </div>
 

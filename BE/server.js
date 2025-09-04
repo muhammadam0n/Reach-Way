@@ -7,11 +7,18 @@ const facebookRoutes = require("./Routes/facebookRoutes.js");
 const postRoutes = require("./Routes/postRoutes.js");
 const threadRoutes = require("./Routes/threadRoutes.js");
 const LinkedinRoutes = require("./Routes/LinkedinRoutes.js");
+const multiPlatformRoutes = require("./Routes/multiPlatformRoutes.js");
+const dashboardRoutes = require("./Routes/dashboardRoutes.js");
+const redditRoutes = require("./Routes/redditRoutes.js");
+const tiktokRoutes = require("./Routes/tiktokRoutes.js");
+const aiRoutes = require("./Routes/aiRoutes.js");
 const Post = require("./models/PostModel.js");
 const cron = require("node-cron")
 const { default: axios } = require("axios");
+const path = require("path");
 const app = express();
-dotenv.config();
+// Ensure .env loads from this folder even if process.cwd() is different
+dotenv.config({ path: path.join(__dirname, ".env") });
 app.use(express.json());
 connectDB();
 
@@ -137,8 +144,12 @@ app.use('/uploads', express.static(`${__dirname}/uploads`));
 app.use('/api', facebookRoutes);
 app.use('/api', userRoutes);
 app.use("/api", LinkedinRoutes);
-
 app.use("/api", postRoutes);
 app.use("/api", threadRoutes);
+app.use("/api", multiPlatformRoutes);
+app.use("/api", dashboardRoutes);
+app.use("/api/reddit", redditRoutes);
+app.use("/api/tiktok", tiktokRoutes);
+app.use("/api", aiRoutes);
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

@@ -42,7 +42,7 @@ const postSchema = new mongoose.Schema(
       enum: ["post", "posted"],
       default: "post",
     },
-        socialMediaPostId: {
+    socialMediaPostId: {
         type: String,
         default: ""
     },
@@ -57,6 +57,86 @@ const postSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
+    // New Analytics Fields
+    analytics: {
+      reach: {
+        type: Number,
+        default: 0
+      },
+      impressions: {
+        type: Number,
+        default: 0
+      },
+      engagement: {
+        type: Number,
+        default: 0
+      },
+      likes: {
+        type: Number,
+        default: 0
+      },
+      comments: {
+        type: Number,
+        default: 0
+      },
+      shares: {
+        type: Number,
+        default: 0
+      },
+      clicks: {
+        type: Number,
+        default: 0
+      },
+      saves: {
+        type: Number,
+        default: 0
+      },
+      lastUpdated: {
+        type: Date,
+        default: Date.now
+      }
+    },
+    // Platform-specific analytics
+    platformAnalytics: {
+      facebook: {
+        reach: { type: Number, default: 0 },
+        impressions: { type: Number, default: 0 },
+        engagement: { type: Number, default: 0 },
+        reactions: { type: Number, default: 0 },
+        comments: { type: Number, default: 0 },
+        shares: { type: Number, default: 0 },
+        clicks: { type: Number, default: 0 }
+      },
+      instagram: {
+        reach: { type: Number, default: 0 },
+        impressions: { type: Number, default: 0 },
+        engagement: { type: Number, default: 0 },
+        likes: { type: Number, default: 0 },
+        comments: { type: Number, default: 0 },
+        saves: { type: Number, default: 0 },
+        shares: { type: Number, default: 0 }
+      },
+      linkedin: {
+        reach: { type: Number, default: 0 },
+        impressions: { type: Number, default: 0 },
+        engagement: { type: Number, default: 0 },
+        reactions: { type: Number, default: 0 },
+        comments: { type: Number, default: 0 },
+        shares: { type: Number, default: 0 }
+      }
+    },
+    // Performance metrics
+    performance: {
+      engagementRate: { type: Number, default: 0 },
+      reachRate: { type: Number, default: 0 },
+      clickThroughRate: { type: Number, default: 0 },
+      bestPerformingTime: { type: String, default: "" },
+      audienceDemographics: {
+        ageRange: { type: String, default: "" },
+        gender: { type: String, default: "" },
+        location: { type: String, default: "" }
+      }
+    }
   },
   {
     collection: "posts", 

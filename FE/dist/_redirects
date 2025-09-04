@@ -1,0 +1,8 @@
+# Serve policy pages directly
+/privacy /privacy.html 200
+/privacy-policy /privacy.html 200
+/deletion /deletion.html 200
+
+# SPA fallback for all other routes
+/* /index.html 200
+

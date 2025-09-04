@@ -223,11 +223,15 @@ const getLinkedInProfile=async(req,res)=>{
           headers: { "Content-Type": "application/x-www-form-urlencoded" }
       });
 
-      res.json(response.data); // Send access token back to frontend
-  } catch (error) {
-      // console.error("LinkedIn Token Error:", error.response?.data || error.message);
-      res.status(500).json({ error: "Failed to fetch access token", details: error.response?.data });
-  }
+      const payload = response.data || {};
+      return res.json({
+        access_token: payload.access_token,
+        expires_in: payload.expires_in,
+        token_type: payload.token_type
+      });
+    } catch (error) {
+      return res.status(500).json({ error: "Failed to fetch access token", details: error.response?.data || error.message });
+    }
   }
   
 

@@ -1,4 +1,15 @@
 {
+  "name": "media-minds",
+  "version": "1.0.0",
+  "description": "Media-Minds Full Stack Application",
+  "main": "index.js",
+  "scripts": {
+    "start": "cd BE && npm start",
+    "dev": "cd BE && npm run dev",
+    "frontend": "cd FE && npm run dev",
+    "build": "cd FE && npm run build",
+    "install-all": "npm install && cd BE && npm install && cd ../FE && npm install"
+  },
   "dependencies": {
     "cloudinary": "^2.7.0",
     "form-data": "^4.0.4"

@@ -3,6 +3,9 @@ import Container from "../../Components/Container";
 import { IMAGES } from "../../Utils/images";
 import { AddIntegrations, MyIntegrations } from "../../Utils/DummyData";
 import { useSelector } from "react-redux";
+import api from "../../api/AxiosInterceptor";
+import { showToast } from "../../Components/Toast";
+import { socialConfig } from "../../config/socialConfig";
 
 const Integrations = () => {
   const theme = useSelector((state) => state.theme.theme);
@@ -13,14 +16,14 @@ const Integrations = () => {
   const [pages, setPages] = useState([]);
 
 
-  // Face Book Login data
+  // Facebook Login data
   useEffect(() => {
     window.fbAsyncInit = function () {
       window.FB.init({
-        appId: "9099617093459439", // Replace with your Facebook App ID
+        appId: socialConfig.facebook.appId,
         cookie: true,
         xfbml: true,
-        version: "v18.0",
+        version: socialConfig.facebook.version,
       });
       const storedToken = localStorage.getItem("fbAccessToken");
       if (storedToken) {
@@ -37,7 +40,7 @@ const Integrations = () => {
       });
     };
 
-    // Load Facebook SDK
+    // Load Facebook SDK with HTTPS
     (function (d, s, id) {
       let js,
         fjs = d.getElementsByTagName(s)[0];
@@ -66,6 +69,80 @@ const Integrations = () => {
       }
     });
   };
+
+  // Save selected Facebook page as an account in backend
+  const saveFacebookAccount = async (page) => {
+    try {
+      const userId = localStorage.getItem("userId");
+      if (!userId) {
+        showToast({ message: "User not found. Please log in again.", isError: true });
+        return;
+      }
+      const payload = {
+        userId,
+        platform: "facebook",
+        accountType: "page",
+        accountName: page.name,
+        accountId: page.id,
+        accessToken: localStorage.getItem("fbAccessToken"),
+        pageId: page.id,
+        pageAccessToken: page.accessToken,
+      };
+      const res = await api.post({ url: "accounts", data: payload });
+      if (res.success) {
+        showToast({ message: "Facebook page connected", isError: false });
+      }
+    } catch (err) {
+      console.error("Failed to save Facebook account:", err);
+      showToast({ message: "Failed to save Facebook account", isError: true });
+    }
+  };
+
+  // Save IG business account (from first linked FB page) in backend
+  const saveInstagramAccount = async (page) => {
+    try {
+      const userId = localStorage.getItem("userId");
+      if (!userId) {
+        showToast({ message: "User not found. Please log in again.", isError: true });
+        return;
+      }
+      // Fetch IG Business Account ID for the page
+      const resp = await fetch(
+        `https://graph.facebook.com/v19.0/${page.id}?fields=instagram_business_account&access_token=${page.accessToken}`
+      );
+      const data = await resp.json();
+      const igId = data?.instagram_business_account?.id;
+      if (!igId) {
+        showToast({ message: "No Instagram Business Account linked to this page", isError: true });
+        return;
+      }
+      const payload = {
+        userId,
+        platform: "instagram",
+        accountType: "business",
+        accountName: page.name,
+        accountId: igId,
+        instagramBusinessAccountId: igId,
+        accessToken: localStorage.getItem("fbAccessToken"),
+        pageId: page.id,
+        pageAccessToken: page.accessToken,
+      };
+      const res = await api.post({ url: "accounts", data: payload });
+      if (res.success) {
+        showToast({ message: "Instagram account connected", isError: false });
+      }
+    } catch (err) {
+      console.error("Failed to save Instagram account:", err);
+      showToast({ message: "Failed to save Instagram account", isError: true });
+    }
+  };
+
+  // Do not auto-connect the first page; render selectable list instead
+  const hasConnectedRef = useRef(false);
+  useEffect(() => {
+    // Keep this effect to ensure pages are fetched after login, but avoid auto-connect
+    hasConnectedRef.current = false;
+  }, [pages, socialLogin]);
 
   // const frameworks = createListCollection({
   //   items: [
@@ -99,7 +176,7 @@ const Integrations = () => {
         }
       },
       {
-        scope: "pages_manage_posts,pages_read_engagement,pages_read_user_content,instagram_basic,instagram_content_publish",
+        scope: "pages_show_list,pages_manage_posts,pages_read_engagement,pages_read_user_content,instagram_basic,instagram_content_publish",
       }
     );
   };
@@ -109,11 +186,8 @@ const Integrations = () => {
   const [accessToken, setAccessToken] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const hasFetchedToken = useRef(false);
-  // LinkedIn OAuth login URL
-  const redirect_uri = "http://localhost:3000/linkedin";
-  const client_id = "77q0wyhcsxoutt";
-  const client_secret = "WPL_AP1.89bee0NweGvmz1qO.5loRdA==";
-  const linkedInAuthURL = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${client_id}&redirect_uri=${redirect_uri}&scope=${encodeURIComponent("r_events rw_events email w_member_social profile openid")}`;
+  // LinkedIn OAuth login URL - Using configuration
+  const linkedInAuthURL = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${socialConfig.linkedin.clientId}&redirect_uri=${encodeURIComponent(socialConfig.linkedin.redirectUri)}&scope=${encodeURIComponent(socialConfig.linkedin.scope)}`;
 
   useEffect(() => {
     if (hasFetchedToken.current) return; // Prevent multiple runs
@@ -253,21 +327,28 @@ const Integrations = () => {
         break;
       case "Instagram":
         handleLogin();
-
         break;
-      case "Linkedin":
-        {
-          !accessToken ? (
-            handlePostToLinkedIn()) : null
+      case "LinkedIn":
+        if (!accessToken) {
+          window.location.href = linkedInAuthURL;
+        } else {
+          handlePostToLinkedIn();
         }
-
         break;
-      case "Threads":
-        handleLogin();
-
+      case "Twitter":
+        // Twitter integration - placeholder
+        alert("Twitter integration coming soon!");
+        break;
+      case "TikTok":
+        // TikTok integration - placeholder
+        alert("TikTok integration coming soon!");
+        break;
+      case "Reddit":
+        // Reddit integration - placeholder
+        alert("Reddit integration coming soon!");
         break;
       default:
-        console.log("Unknown integration");
+        console.log("Unknown integration:", data);
         break;
     }
   };
@@ -307,39 +388,71 @@ const Integrations = () => {
               className="grid sm:grid-cols-4 grid-cols-2 gap-4 md:justify-start 
             justify-center items-start py-4"
             >
-              {MyIntegrations.map((integration, index) => (
-                <div key={index} className="flex items-start justify-start sm:p-6 p-4 rounded-md cursor-pointer">
-                  <div
-                    key={index}
-                    className="flex flex-col gap-y-1 items-center justify-center"
-                  >
-                    <button
-                      onClick={() => {
-                        if (integration?.name === "Linkedin" && !accessToken) {
-                          window.location.href = linkedInAuthURL; // Redirect for LinkedIn login
-                        } else {
-                          handleSelectedIntegration(integration?.name); // Handle other integrations
-                        }
-                      }}
-                    >
-                      <img
-                        src={integration.img}
-                        alt={integration.name}
-                        draggable={false}
-                        className="md:w-[55px] w-[35px] object-contain"
-                      />
-                    </button>
+              {MyIntegrations.map((integration, index) => {
+                const isConnected = 
+                  (integration.name === "Facebook" && localStorage.getItem("fbAccessToken")) ||
+                  (integration.name === "LinkedIn" && localStorage.getItem("linkedin_token"));
+                
+                return (
+                  <div key={index} className="flex items-start justify-start sm:p-6 p-4 rounded-md cursor-pointer relative">
+                    <div className="flex flex-col gap-y-1 items-center justify-center">
+                      <button
+                        onClick={() => {
+                          if (integration?.name === "LinkedIn" && !accessToken) {
+                            window.location.href = linkedInAuthURL; // Redirect for LinkedIn login
+                          } else {
+                            handleSelectedIntegration(integration?.name); // Handle other integrations
+                          }
+                        }}
+                        className="relative"
+                      >
+                        <img
+                          src={integration.img}
+                          alt={integration.name}
+                          draggable={false}
+                          className={`md:w-[55px] w-[35px] object-contain opacity-100 drop-shadow`}
+                          onError={(e) => {
+                            // Fallback to a default icon if the image fails to load
+                            e.target.src = "https://cdn-icons-png.flaticon.com/512/3670/3670157.png";
+                          }}
+                        />
+                        {isConnected && (
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                        )}
+                      </button>
 
-                    <h2 className="text14 text-primaryColor dark:text-whiteColor">
-                      {integration.name}
-                    </h2>
+                      <h2 className="text14 text-primaryColor dark:text-whiteColor">
+                        {integration.name}
+                      </h2>
+                      {isConnected && (
+                        <span className="text-xs text-green-600 font-medium">Connected</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
           {/* My Integration Icon  */}
           {/* Add Integration Icon  */}
+          {/* Meta pages selection (allows adding multiple accounts) */}
+          {(pages?.length > 0 && (socialLogin === "Facebook" || socialLogin === "Instagram")) && (
+            <div className="mt-2">
+              <h2 className="text14 font-medium text-primaryColor dark:text-whiteColor mb-2">Select a Page to Connect</h2>
+              <div className="flex flex-wrap gap-2">
+                {pages.map((page) => (
+                  <div key={page.id} className="flex items-center gap-2 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2">
+                    <span className="text13 text-primaryColor dark:text-whiteColor">{page.name}</span>
+                    {socialLogin === "Facebook" ? (
+                      <button onClick={() => saveFacebookAccount({ id: page.id, name: page.name, accessToken: page.access_token || page.accessToken })} className="text12 bg-primaryColor text-whiteColor rounded px-2 py-1">Connect</button>
+                    ) : (
+                      <button onClick={() => saveInstagramAccount({ id: page.id, name: page.name, accessToken: page.access_token || page.accessToken })} className="text12 bg-primaryColor text-whiteColor rounded px-2 py-1">Connect IG</button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {/* <div>
             <h1 className="text8 font-semibold text-primaryColor dark:text-whiteColor">
               +Add Intergration
