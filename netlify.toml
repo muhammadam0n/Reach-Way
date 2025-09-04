@@ -1,6 +1,10 @@
 [build]
-  publish = "dist"
-  command = "npm run build"
+  base = "FE"
+  publish = "FE/dist"
+  command = "cd FE && npm install && npm run build"
+
+[build.environment]
+  NODE_VERSION = "18"
 
 [[redirects]]
   from = "/privacy"
